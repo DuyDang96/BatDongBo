@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CyberShop Mini - Cửa Hàng Bất Đồng Bộ Hiện Đại</title>
+  <meta name="description" content="Trang cửa hàng mini xử lý bất đồng bộ trong JavaScript với Axios, Promise.all, Debounce, AbortController và 4 trạng thái giao diện.">
+  
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Decorative ambient glow -->
+  <div class="bg-glow-orb"></div>
+
+  <!-- ==========================================================================
+       HEADER & NAVIGATION
+       ========================================================================== -->
+  <header class="site-header">
+    <div class="container nav-wrapper">
+      <a href="#" class="logo-brand" id="brandLogo">
+        <div class="logo-icon-box">⚡</div>
+        <div class="logo-text">
+          <h1>CYBERSHOP</h1>
+          <span>Async JS Mini Store</span>
+        </div>
+      </a>
+
+      <div class="header-actions">
+        <!-- Live Async Status Indicator -->
+        <div class="async-indicator" id="asyncStatusBadge" title="Trạng thái kết nối bất đồng bộ">
+          <span class="pulse-dot"></span>
+          <span id="asyncStatusText">Sẵn sàng</span>
+        </div>
+
+        <!-- Mini Cart Button -->
+        <button class="cart-trigger-btn" id="cartBtn" title="Xem giỏ hàng">
+          <span>🛒 Giỏ hàng</span>
+          <span class="cart-badge" id="cartCountBadge">0</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==========================================================================
+       MAIN CONTENT
+       ========================================================================== -->
+  <main class="container">
+
+    <!-- Hero / Info Banner -->
+    <section class="hero-section">
+      <div class="hero-banner">
+        <div class="hero-content">
+          <h2>Khám Phá Sản Phẩm Cùng <span>Xử Lý Bất Đồng Bộ</span></h2>
+          <p>Trang web minh họa toàn diện 4 trạng thái giao diện (Đang tải, Có dữ liệu, Rỗng, Lỗi), kỹ thuật gọi song song (Promise.all), Debounce ô tìm kiếm và Hủy bỏ Request cũ bằng AbortController.</p>
+          
+          <div class="concept-tags">
+            <span class="tag-badge">⚡ <b>Promise.all</b> Gọi song song</span>
+            <span class="tag-badge">⏱️ <b>Debounce (400ms)</b> Tìm kiếm mượt mà</span>
+            <span class="tag-badge">🛑 <b>AbortController</b> Hủy request thừa</span>
+            <span class="tag-badge">🛡️ <b>Defensive Render</b> Chống vỡ giao diện</span>
+          </div>
+        </div>
+
+        <!-- Testing Laboratory / Demo Controls -->
+        <div class="simulation-bar">
+          <div class="sim-label">
+            <span>🧪 Chế độ thử nghiệm:</span>
+          </div>
+          <div class="sim-btn-group">
+            <button class="sim-btn active" id="simNormalBtn" title="Chạy bình thường lấy từ DummyJSON">Bình thường</button>
+            <button class="sim-btn" id="simEmptyBtn" title="Giả lập trạng thái danh sách rỗng">Giả lập Rỗng</button>
+            <button class="sim-btn" id="simErrorBtn" title="Giả lập lỗi mạng 500/Network Error">Giả lập Lỗi</button>
+            <button class="sim-btn" id="simDelayBtn" title="Giả lập mạng chậm thêm 1.5s để ngắm loading skeleton">Giả lập Mạng chậm (+1.5s)</button>
+            <button class="sim-btn" id="simOutOfStockBtn" title="Giả lập sản phẩm hết hàng (stock = 0)">Giả lập SP Hết hàng</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Async Telemetry Live Feed -->
+    <div class="telemetry-banner" id="telemetryBanner">
+      <div class="telemetry-left">
+        <span class="telemetry-badge" id="telemetryTag">LOG</span>
+        <span class="telemetry-message" id="telemetryMessage">Khởi tạo ứng dụng thành công.</span>
+      </div>
+      <div class="telemetry-stats" id="telemetryStats">Sẵn sàng</div>
+    </div>
+
+    <!-- Controls: Search, Sort, Categories -->
+    <section class="controls-section">
+      <div class="controls-card">
+        <div class="search-and-sort">
+          <!-- Debounced Search Input -->
+          <div class="search-input-box">
+            <span class="search-icon">🔍</span>
+            <input 
+              type="text" 
+              class="search-input" 
+              id="searchInput" 
+              placeholder="Tìm kiếm sản phẩm (ví dụ: iPhone, laptop, watch, perfume...)"
+              autocomplete="off"
+            >
+            <span class="search-indicator-tag" id="searchFeedbackTag">Debounce: 400ms</span>
+          </div>
+
+          <!-- Sort Dropdown -->
+          <div class="select-wrapper">
+            <select class="custom-select" id="sortSelect" aria-label="Sắp xếp sản phẩm">
+              <option value="default">Sắp xếp: Mặc định</option>
+              <option value="price-asc">Giá: Thấp đến Cao</option>
+              <option value="price-desc">Giá: Cao đến Thấp</option>
+              <option value="rating-desc">Đánh giá cao nhất ⭐</option>
+              <option value="title-asc">Tên: A → Z</option>
+            </select>
+          </div>
+
+          <!-- Refresh Button -->
+          <button class="btn-secondary" id="refreshBtn" title="Tải lại danh sách sản phẩm">
+            <span>🔄 Tải lại</span>
+          </button>
+        </div>
+
+        <!-- Dynamic Category Filter Pills (Loaded in Parallel via Promise.all) -->
+        <div class="category-filter-wrapper">
+          <div class="category-filter-label">
+            <span>🏷️ Danh mục sản phẩm (Được nạp song song qua Promise.all):</span>
+          </div>
+          <div class="category-pills" id="categoryPillsContainer">
+            <!-- Dynamically populated or skeleton -->
+            <button class="cat-pill active" data-category="all">Tất cả sản phẩm</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================================================
+         4 DYNAMIC STATES AREA
+         ========================================================================== -->
+    <section class="display-area" id="displayArea">
+
+      <!-- 1. LOADING STATE (Skeleton shimmer cards) -->
+      <div class="state-container" id="stateLoading">
+        <div class="product-grid" id="skeletonGrid">
+          <!-- Generated 8 skeleton cards -->
+        </div>
+      </div>
+
+      <!-- 2. DATA SUCCESS STATE (Rendered Product Cards) -->
+      <div class="state-container" id="stateData">
+        <div class="product-grid" id="productsGrid">
+          <!-- Products will be dynamically inserted here -->
+        </div>
+      </div>
+
+      <!-- PHÂN TRANG Ở CUỐI TRANG (Limit & Skip) -->
+      <div class="pagination-wrapper" id="paginationWrapper">
+        <div class="pagination-container">
+          <!-- Nút Trước: Bị khóa khi ở trang đầu hoặc khi đang tải -->
+          <button class="pagination-btn" id="prevPageBtn" title="Về trang trước" disabled>
+            <span>← Trước</span>
+          </button>
+
+          <!-- Trạng thái Trang x / y hoặc 'Đang tải...' khi chờ API -->
+          <div class="pagination-info" id="paginationInfo">
+            <span class="page-status" id="pageStatusText">Trang 1 / 1</span>
+          </div>
+
+          <!-- Nút Sau: Bị khóa khi ở trang cuối hoặc khi đang tải -->
+          <button class="pagination-btn" id="nextPageBtn" title="Sang trang sau">
+            <span>Sau →</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 3. EMPTY STATE (Trạng thái rỗng) -->
+      <div class="state-container" id="stateEmpty">
+        <div class="empty-state-box">
+          <div class="empty-icon-wrap">📦</div>
+          <h3>Không tìm thấy sản phẩm nào!</h3>
+          <p id="emptyMessage">Không có sản phẩm nào khớp với từ khóa tìm kiếm hoặc bộ lọc hiện tại của bạn. Vui lòng thử tìm với từ khóa khác.</p>
+          <div class="empty-actions">
+            <button class="btn-retry" id="emptyResetBtn">
+              <span>🧹 Xóa bộ lọc & Xem tất cả</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. ERROR STATE (Trạng thái lỗi) -->
+      <div class="state-container" id="stateError">
+        <div class="error-state-box">
+          <div class="error-icon-wrap">⚠️</div>
+          <h3>Đã xảy ra sự cố khi tải dữ liệu!</h3>
+          <p id="errorMessage">Hệ thống không thể kết nối tới máy chủ DummyJSON API. Hãy kiểm tra kết nối mạng hoặc thử lại.</p>
+          <div class="error-code-detail" id="errorCodeDetail">Error: Network Error</div>
+          <br>
+          <button class="btn-retry" id="errorRetryBtn">
+            <span>🔄 Thử lại ngay</span>
+          </button>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- ==========================================================================
+       PRODUCT DETAIL MODAL
+       ========================================================================== -->
+  <div class="modal-overlay" id="productModal">
+    <div class="modal-dialog">
+      <button class="modal-close-btn" id="modalCloseBtn" aria-label="Đóng">&times;</button>
+      <div class="modal-media-wrap">
+        <img id="modalImg" src="" alt="Chi tiết sản phẩm">
+      </div>
+      <div class="modal-info">
+        <div class="card-badges" style="position: static; margin-bottom: 12px; flex-direction: row;">
+          <span class="badge category" id="modalCategory">Danh mục</span>
+          <span class="badge discount" id="modalDiscount">-0%</span>
+        </div>
+        <h2 id="modalTitle">Tên sản phẩm</h2>
+        <div class="card-rating" style="margin-bottom: 12px;">
+          <span class="stars" id="modalStars">★★★★★</span>
+          <span class="score" id="modalRatingScore">5.0</span>
+          <span style="color: var(--text-dim);" id="modalStock">Còn hàng: 0</span>
+        </div>
+        <p class="card-desc" style="-webkit-line-clamp: unset; max-height: 150px; overflow-y: auto;" id="modalDesc">Mô tả sản phẩm...</p>
+        <div class="card-footer" style="margin-top: auto; padding-top: 18px;">
+          <div class="price-box">
+            <span class="price-current" id="modalPrice">$0.00</span>
+            <span class="price-original" id="modalOriginalPrice">$0.00</span>
+          </div>
+          <button class="btn-retry" id="modalAddToCartBtn" style="padding: 10px 22px;">
+            <span>🛒 Thêm vào giỏ</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <p>Dự án minh họa <b>Xử Lý Bất Đồng Bộ Trong JavaScript</b> &bull; Axios &bull; Promise.all &bull; AbortController &bull; Debounce</p>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <!-- 1. Axios library (via CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <!-- 2. Main Logic File as requested in HOCBATDONGBO.js -->
+  <script src="HOCBATDONGBO.js"></script>
+</body>
+</html>
